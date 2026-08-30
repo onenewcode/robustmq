@@ -36,9 +36,7 @@ RobustMQ wants to invite you to sign your name for us — this signature will al
 @lqleon1214
 @dongguacai
 @gmaso
-@yyf
-@gfan8k
-@173787247
+@zhouhaiwu
 
 ## How to Sign Your Name
 
