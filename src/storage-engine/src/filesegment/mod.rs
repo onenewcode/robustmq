@@ -190,10 +190,11 @@ mod tests {
         );
 
         // Note: delete_by_shard removes physical files by iterating
-        // broker_config().storage_runtime.data_path. In unit tests that field
-        // is empty (default_broker_config sets no data_path), so the directory
-        // removal loop is a no-op. The meaningful unit-test invariant is that
-        // the RocksDB index is cleared, which the key/tag assertions above
+        // broker_config().storage_runtime.data_path, which in unit tests is the
+        // built-in default ("./data/engine"), while the test data actually
+        // lives under /tmp/tests/<id> (test_build_data_fold). So the directory
+        // removal loop is a no-op here. The meaningful unit-test invariant is
+        // that the RocksDB index is cleared, which the key/tag assertions above
         // already cover.
     }
 

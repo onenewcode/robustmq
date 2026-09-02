@@ -202,6 +202,19 @@ impl MetaCacheManager {
         results
     }
 
+    /// Engine nodes that can actually hold a shard replica, i.e. the ones that
+    /// registered at least one storage folder. A folder-less node passes the
+    /// role check but is rejected later by `calc_node_fold`, so every replica
+    /// placement decision must be made against this list rather than
+    /// `get_engine_node_list`.
+    pub fn get_storage_ready_engine_node_ids(&self) -> Vec<u64> {
+        self.node_list
+            .iter()
+            .filter(|node| is_engine_node(&node.roles) && !node.storage_fold.is_empty())
+            .map(|node| node.node_id)
+            .collect()
+    }
+
     // Heartbeat
     pub fn report_broker_heart(&self, node_id: u64) {
         let data = NodeHeartbeatData {
@@ -359,4 +372,36 @@ pub fn load_cache_by_rocksdb(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MetaCacheManager;
+    use common_base::role::{ROLE_BROKER, ROLE_ENGINE};
+    use metadata_struct::meta::node::BrokerNode;
+    use rocksdb_engine::test::test_rocksdb_instance;
+
+    fn node(node_id: u64, roles: &[&str], storage_fold: &[&str]) -> BrokerNode {
+        BrokerNode {
+            node_id,
+            roles: roles.iter().map(|r| r.to_string()).collect(),
+            storage_fold: storage_fold.iter().map(|f| f.to_string()).collect(),
+            ..Default::default()
+        }
+    }
+
+    // Replica placement must ignore engine nodes that registered no storage
+    // folder: they pass the role check but calc_node_fold rejects them, which
+    // would fail the whole allocation instead of just skipping the node.
+    #[test]
+    fn storage_ready_engine_nodes_skip_folderless_and_non_engine_nodes() {
+        let cache_manager = MetaCacheManager::new(test_rocksdb_instance());
+
+        cache_manager.add_broker_node(node(1, &[ROLE_ENGINE], &["./data/engine"]));
+        cache_manager.add_broker_node(node(2, &[ROLE_ENGINE], &[]));
+        cache_manager.add_broker_node(node(3, &[ROLE_BROKER], &["./data/engine"]));
+
+        assert_eq!(cache_manager.get_engine_node_list().len(), 2);
+        assert_eq!(cache_manager.get_storage_ready_engine_node_ids(), vec![1]);
+    }
 }

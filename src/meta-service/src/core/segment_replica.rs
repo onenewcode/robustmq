@@ -92,11 +92,17 @@ pub async fn build_segment(
         return Ok(segment);
     }
 
-    let alive: Vec<u64> = cache_manager
-        .get_engine_node_list()
-        .iter()
-        .map(|n| n.node_id)
-        .collect();
+    let alive = cache_manager.get_storage_ready_engine_node_ids();
+
+    // "No engine node at all" and "engine nodes exist but none of them has a
+    // storage folder" are both `alive == 0`, but only the second one is a
+    // config mistake, and effective_replica_num cannot tell them apart.
+    if alive.is_empty() && !cache_manager.get_engine_node_list().is_empty() {
+        return Err(MetaServiceError::CommonError(
+            "no engine node has a storage folder configured, set [storage_runtime] data_path"
+                .to_string(),
+        ));
+    }
 
     let target_replicas = effective_replica_num(
         shard_info.config.is_inner_topic,
@@ -232,11 +238,7 @@ async fn fill_inner_topic_replicas_once(
         return;
     }
 
-    let alive: Vec<u64> = cache_manager
-        .get_engine_node_list()
-        .iter()
-        .map(|n| n.node_id)
-        .collect();
+    let alive = cache_manager.get_storage_ready_engine_node_ids();
     if alive.is_empty() {
         return;
     }
