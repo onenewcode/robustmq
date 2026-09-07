@@ -202,11 +202,8 @@ impl MetaCacheManager {
         results
     }
 
-    /// Engine nodes that can actually hold a shard replica, i.e. the ones that
-    /// registered at least one storage folder. A folder-less node passes the
-    /// role check but is rejected later by `calc_node_fold`, so every replica
-    /// placement decision must be made against this list rather than
-    /// `get_engine_node_list`.
+    /// Engine nodes eligible for replica placement. A node with no storage
+    /// folder passes the role check but is rejected later by `calc_node_fold`.
     pub fn get_storage_ready_engine_node_ids(&self) -> Vec<u64> {
         self.node_list
             .iter()
@@ -390,9 +387,6 @@ mod tests {
         }
     }
 
-    // Replica placement must ignore engine nodes that registered no storage
-    // folder: they pass the role check but calc_node_fold rejects them, which
-    // would fail the whole allocation instead of just skipping the node.
     #[test]
     fn storage_ready_engine_nodes_skip_folderless_and_non_engine_nodes() {
         let cache_manager = MetaCacheManager::new(test_rocksdb_instance());

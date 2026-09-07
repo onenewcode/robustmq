@@ -990,10 +990,6 @@ mod tests {
         );
     }
 
-    // An engine node registered with an empty storage_fold is accepted by the
-    // meta service and only fails later, when a shard replica has to be placed
-    // on it (issue #2043). So data_path must fall back to a usable folder
-    // whether the whole section or just the key is missing.
     #[test]
     fn storage_data_path_defaults_and_overrides() {
         let parse = |body: &str| {

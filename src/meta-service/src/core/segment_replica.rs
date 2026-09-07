@@ -94,9 +94,8 @@ pub async fn build_segment(
 
     let alive = cache_manager.get_storage_ready_engine_node_ids();
 
-    // "No engine node at all" and "engine nodes exist but none of them has a
-    // storage folder" are both `alive == 0`, but only the second one is a
-    // config mistake, and effective_replica_num cannot tell them apart.
+    // effective_replica_num sees only `alive.len() == 0` and cannot tell a
+    // cluster with no engine node from this misconfiguration.
     if alive.is_empty() && !cache_manager.get_engine_node_list().is_empty() {
         return Err(MetaServiceError::CommonError(
             "no engine node has a storage folder configured, set [storage_runtime] data_path"
