@@ -160,9 +160,7 @@ mod tests {
         assert!(!sf2.exists(), "segment file must be physically deleted");
     }
 
-    // delete_by_shard drops every RocksDB key under the shard prefix: meta,
-    // shard-level indices and each segment's keys. Its physical-directory pass
-    // iterates the configured data_path and is not covered here.
+    // Index only; delete_by_shard's data_path cleanup is not exercised here.
     #[tokio::test]
     async fn filesegment_delete_shard_clears_index() {
         let (seg, cache, _fold, db) = setup_and_write(5).await;
